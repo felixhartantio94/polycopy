@@ -14,7 +14,7 @@ export default function PrivyProviderBase({ children }: { children: React.ReactN
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ['email', 'wallet', 'google'],
+        loginMethods: ['email', 'google'],
         appearance: {
           theme: 'dark',
           accentColor: '#667eea',

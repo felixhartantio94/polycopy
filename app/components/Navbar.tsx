@@ -1,11 +1,46 @@
 'use client';
 
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { usePrivy, useWallets, useSigners, useLogin } from '@privy-io/react-auth';
 import { Button } from 'antd';
+import { useEffect, useState } from 'react';
 
 export default function Navbar() {
-  const { ready, authenticated, login, logout, user } = usePrivy();
+  const { ready, authenticated, logout, user } = usePrivy();
   const { wallets } = useWallets();
+  const { addSigners } = useSigners();
+  const [hasCheckedDelegation, setHasCheckedDelegation] = useState(false);
+  
+  const authorizationKeyId = process.env.NEXT_PUBLIC_PRIVY_AUTHORIZATION_ID;
+
+  // Use useLogin with onComplete callback to automatically delegate for new users
+  const { login } = useLogin({
+    onComplete: async ({ user, isNewUser }) => {
+      if (isNewUser && user.wallet?.address && authorizationKeyId) {
+        try {
+          // Automatically add session signers for new users
+          await addSigners({
+            address: user.wallet.address,
+            signers: [{
+              signerId: authorizationKeyId,
+              // Empty array means full permission, or specify policy IDs for restricted access
+              policyIds: []
+            }]
+          });
+          console.log('✅ Auto-delegation successful for new user:', user.wallet.address);
+        } catch (error) {
+          // If signer already exists (duplicate), treat it as success
+          if (error instanceof Error && 
+              (error.message.includes('Duplicate signer') || 
+               error.message.includes('already been added'))) {
+            console.log('✅ Signer already exists for new user:', user.wallet.address);
+          } else {
+            console.error('❌ Error auto-delegating for new user:', error);
+            // If wallet proxy not initialized, the useEffect will handle it later
+          }
+        }
+      }
+    }
+  });
 
   const handleConnect = async () => {
     if (!authenticated) {
@@ -14,46 +49,8 @@ export default function Navbar() {
   };
 
   const handleDisconnect = async () => {
+    setHasCheckedDelegation(false);
     await logout();
-  };
-
-  const handleEnableServerAccess = async () => {
-    if (!authenticated || !wallets[0]) {
-      alert('Please connect your wallet first');
-      return;
-    }
-
-    try {
-      // Get the access token from Privy
-      const accessToken = await user?.getAccessToken();
-      
-      if (!accessToken) {
-        alert('Failed to get access token');
-        return;
-      }
-
-      const response = await fetch('/api/wallet/add-signer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          walletAddress: wallets[0].address,
-          accessToken,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert('Server-side access enabled successfully! Signer ID: ' + data.signerId);
-      } else {
-        alert('Error: ' + (data.error || data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error enabling server access:', error);
-      alert('Failed to enable server-side access');
-    }
   };
 
   if (!ready) {
@@ -82,13 +79,6 @@ export default function Navbar() {
                   {wallets[0].address.slice(0, 6)}...{wallets[0].address.slice(-4)}
                 </div>
               )}
-              <Button
-                type="primary"
-                size="small"
-                onClick={handleEnableServerAccess}
-              >
-                Enable Server Access
-              </Button>
               <Button
                 size="small"
                 onClick={handleDisconnect}
