@@ -1,0 +1,38 @@
+{
+  "name": "polycopy",
+  "version": "1.0.0",
+  "description": "Next.js API for Polymarket leaderboard data",
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ant-design/icons": "^6.1.0",
+    "@privy-io/react-auth": "^3.10.0",
+    "@privy-io/server-auth": "^1.32.5",
+    "@solana-program/memo": "^0.10.0",
+    "@solana-program/system": "^0.10.0",
+    "@solana-program/token": "^0.9.0",
+    "@solana/kit": "^5.1.0",
+    "antd": "^6.1.2",
+    "ethers": "^6.16.0",
+    "next": "^16.1.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "recharts": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.0.0"
+  }
+}
